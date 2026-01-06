@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Notes Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div class="logo-icon">RN</div>
+                <div>
+                    <div class="logo-text">Release Notes Manager</div>
+                    <span class="tagline">AI-Powered Release Notes Generation</span>
+                </div>
+            </div>
+            <nav>
+                <a href="#" class="tab active" data-tab="generate">Generate</a>
+                <a href="#" class="tab" data-tab="progress">Progress</a>
+                <a href="#" class="tab" data-tab="results">Results</a>
+                <a href="#" class="tab" data-tab="history">History</a>
+                <a href="#" class="tab" data-tab="repositories">Repositories</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="generateContent" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Generate Release Notes</h2>
+                    <p class="card-subtitle">Enter Jira task details and let AI generate professional release notes</p>
+                </div>
+
+                <form id="generateForm">
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label for="inputType">Input Type</label>
+                            <select id="inputType">
+                                <option value="task">Single Task</option>
+                                <option value="multiple">Multiple Tasks</option>
+                                <option value="jql">JQL Filter</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="version">Version (Optional - Auto-detect from Git tags)</label>
+                            <input type="text" id="version" placeholder="e.g., 1.2.3">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="jiraInput">Jira Task Number or JQL Filter</label>
+                        <input type="text" id="jiraInput" placeholder="Enter Jira task number (e.g., PRND-1234)">
+                    </div>
+
+                    <div class="input-group hidden" id="jqlEditor">
+                        <label for="jqlQuery">JQL Query Editor</label>
+                        <textarea id="jqlQuery" placeholder="project = PRND AND status = Done AND labels = Release-2025-Q1"></textarea>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="app.insertTemplate('project = PRND AND status = Done')">
+                                Done Tasks
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="app.insertTemplate('labels = Release-2025-Q1')">
+                                By Label
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label for="releaseDate">Release Date</label>
+                            <input type="date" id="releaseDate">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="author">Author / Release Manager</label>
+                            <input type="text" id="author" placeholder="Your name">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="releaseName">Release Name</label>
+                            <input type="text" id="releaseName" placeholder="e.g., 2025 Q1 Release">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button type="button" id="generateBtn" class="btn btn-primary">
+                            <span>Generate Release Notes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Start</h2>
+                    <p class="card-subtitle">Get started in 3 simple steps</p>
+                </div>
+
+                <div class="grid-3">
+                    <div style="padding: 20px; background: var(--gray-50); border-radius: var(--radius);">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">1</div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">Enter Jira Task</div>
+                        <div style="font-size: 13px; color: var(--gray-600);">Enter a single task, multiple tasks, or JQL filter</div>
+                    </div>
+
+                    <div style="padding: 20px; background: var(--gray-50); border-radius: var(--radius);">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">2</div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">AI Analyzes Changes</div>
+                        <div style="font-size: 13px; color: var(--gray-600);">AI fetches Jira tasks, GitHub commits, and analyzes code changes</div>
+                    </div>
+
+                    <div style="padding: 20px; background: var(--gray-50); border-radius: var(--radius);">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">3</div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">Get Release Notes</div>
+                        <div style="font-size: 13px; color: var(--gray-600);">Export professional release notes in multiple formats</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="progressContent" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Job Progress</h2>
+                    <p class="card-subtitle">Real-time progress of release notes generation</p>
+                </div>
+
+                <div id="progressSection" class="hidden">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--gray-800);">Job ID</div>
+                            <div id="jobIdDisplay" style="font-size: 13px; color: var(--gray-600); font-family: monospace;"></div>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--gray-800);">Status</div>
+                            <span id="jobStatus" class="status-badge status-pending">Pending</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="currentStep">Waiting to start...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="app.cancelJob()">
+                            Cancel Job
+                        </button>
+                    </div>
+                </div>
+
+                <div id="noProgressSection" class="empty-state">
+                    <div class="empty-state-icon">⏳</div>
+                    <div class="empty-state-title">No Active Job</div>
+                    <div class="empty-state-text">Start a new job to see progress here</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsContent" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Generated Release Notes</h2>
+                    <p class="card-subtitle">Review, edit, and export your release notes</p>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.loadAllResults()">
+                            Load All Completed Results
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.clearResults()">
+                            Clear Results
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div class="empty-state-title">No Results Yet</div>
+                        <div class="empty-state-text">Generate release notes to see results here</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="historyContent" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Jobs</h2>
+                    <p class="card-subtitle">View and manage your previous release notes generation jobs</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <button type="button" class="btn btn-primary" onclick="app.loadAllResults()">
+                        Load All Completed Results
+                    </button>
+                </div>
+
+                <div id="recentJobs">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">No Jobs Yet</div>
+                        <div class="empty-state-text">Your job history will appear here</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="repositoriesContent" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">GitHub Repositories</h2>
+                    <p class="card-subtitle">Browse repositories in your organization</p>
+                </div>
+
+                <div id="repositoriesList">
+                    <div class="empty-state">
+                        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+                        <div class="empty-state-title">Loading repositories...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
